@@ -16,35 +16,42 @@ Tâches à réaliser :
 --Détecte s’il existe une vague de chaleur (au moins 3 jours > 30°C consécutifs).
 --Affiche un résumé des résultats.
 """
+
 import numpy as np
+import matplotlib.pyplot as plt
 
 joursParMois = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 mois = np.array([
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin","Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
 ])
+
+# les temperatures mins et max pour chaque mois
 tempMins = [2, 3, 5, 8, 12, 15, 18, 18, 15, 10, 6, 3]
 tempMaxs = [7, 9, 13, 16, 20, 29, 35, 32, 24, 18, 12, 8]
 
 nombreJoursTotal=365
 temperatures = []
 
+# attribuer aleatoirement chaque jour (les 365 ) a une temperature
 for i in range(12):
     nbJours = joursParMois[i]
     tMin = tempMins[i]
     tMax = tempMaxs[i]
     tempMois = np.random.randint(tMin, tMax + 1, size=nbJours)
     temperatures.extend(tempMois)
-
+    
+# transformer notre liste 'temperatures' en tableau NumPy
 tabTemp = np.array(temperatures)
 
+# chercher la temperature max et son jour dans l'annee
 tempMax = np.max(tabTemp)
 jourTempMax = np.argmax(tabTemp)
 
 jourCumul = 0
 moisTempMax = 0
 jourDansMoisMax = 0
-
+# chercher le ieme jour dans l'annee ou la temperature est max
 for i, nbJours in enumerate(joursParMois):
     if jourTempMax < jourCumul + nbJours:
         moisTempMax = i + 1
@@ -52,13 +59,14 @@ for i, nbJours in enumerate(joursParMois):
         break
     jourCumul += nbJours
 
+# chercher la temperature min et son jour dans l'annee
 tempMin = np.min(tabTemp)
 jourTempMin = np.argmin(tabTemp)
 
 jourCumul = 0
 moisTempMin = 0
 jourDansMoisMin = 0
-
+# chercher le ieme jour dans l'annee ou la temperature est min
 for i, nbJours in enumerate(joursParMois):
     if jourTempMin < jourCumul + nbJours:
         moisTempMin = i + 1
@@ -66,6 +74,7 @@ for i, nbJours in enumerate(joursParMois):
         break
     jourCumul += nbJours
 
+# faire la moyenne mensuelle des temperatures
 tabtempMoyenne = np.zeros(12).reshape(1, 12)
 compteurJour = 0
 for i in range(12):
@@ -74,21 +83,48 @@ for i in range(12):
     for j in range(joursParMois[i]):
         tempDuMoisCourant = tempDuMoisCourant + tabTemp[compteurJour + j]
 
-    compteurJour = compteurJour + j
-    moyenneDuMois = tempDuMoisCourant /(j+1)
-    # a revoir
+    compteurJour += joursParMois[i]
+    moyenneDuMois = tempDuMoisCourant / joursParMois[i]
     tabtempMoyenne[0, i] = moyenneDuMois
-    print(moyenneDuMois)
-    print(tabtempMoyenne[0,1])
 
-        
-print(tabTemp)
+# la figure principal
+plt.figure(figsize=(14,10))  # taille de la figure globale
 
+# visuel des températures journalières (courbe)
+plt.subplot(2, 2, 1)  # (nblignes, nbcolonnes, position)
+plt.plot(tabTemp, label="Température journalière")
+plt.axhline(tempMax, color="red", linestyle="--", label="Max annuel")
+plt.axhline(tempMin, color="blue", linestyle="--", label="Min annuel")
+plt.xlabel("Jour de l'année")
+plt.ylabel("Température (°C)")
+plt.title("Variation journalière")
+plt.legend()
 
-print("Température max :", tempMax)
-print("Jour de l'année :", jourTempMax + 1)
-print(f"Date du jour le plus chaud : {jourDansMoisMax} {mois[moisTempMax -1]} (mois {moisTempMax})")
+# Moyenne mensuelle (bar chart)
+plt.subplot(2, 2, 2)
+plt.bar(mois, tabtempMoyenne.flatten(), color="orange")
+plt.xlabel("Mois")
+plt.ylabel("Température moyenne (°C)")
+plt.title("Température moyenne par mois")
+plt.xticks(rotation=45)
 
-print("Température min :", tempMin)
-print("Jour de l'année :", jourTempMin + 1)
-print(f"Date du jour le plus froid : {jourDansMoisMin} {mois[moisTempMin -1]} (mois {moisTempMin})")
+# Histogramme des températures
+plt.subplot(2, 2, 3)
+plt.hist(tabTemp, bins=20, color="green", edgecolor="black")
+plt.xlabel("Températures (°C)")
+plt.ylabel("Nombre de jours")
+plt.title("Distribution des températures annuelles")
+
+# Min/Max par mois
+plt.subplot(2, 2, 4)
+plt.plot(mois, tempMins, marker="o", color="blue", label="Min")
+plt.plot(mois, tempMaxs, marker="o", color="red", label="Max")
+plt.xlabel("Mois")
+plt.ylabel("Température (°C)")
+plt.title("Évolution min/max par mois")
+plt.xticks(rotation=45)
+plt.legend()
+
+#on ajuste l'emplacement des 4 figures
+plt.tight_layout() 
+plt.show()
